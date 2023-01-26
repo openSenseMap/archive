@@ -46,6 +46,8 @@ async function main() {
   for await (const box of boxesCursor) {
     const boxName = box.name.replace(/[^A-Za-z0-9._-]/g, "_");
     const folderNameAndPath = `${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}/${boxName}-${date}.json`;
+    let boxHasData = false;
+    const dailyStats = new Map();
 
     for await (const sensor of box.sensors) {
       // console.time(`Getting measurements for sensor: ${sensor._id}`);
@@ -75,26 +77,68 @@ async function main() {
         },
       ];
 
+      const daily = [
+        { $match: { sensor_id: sensor._id } },
+        {
+          $group: {
+            _id: "$sensor_id",
+            avg: {
+              $avg: {
+                $toDouble: {
+                  $trim: { input: "$value" },
+                },
+              },
+            },
+            min: {
+              $min: {
+                $toDouble: {
+                  $trim: { input: "$value" },
+                },
+              },
+            },
+            max: {
+              $max: {
+                $toDouble: {
+                  $trim: { input: "$value" },
+                },
+              },
+            },
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              avg: "$avg",
+              min: "$min",
+              max: "$max",
+            },
+          },
+        },
+      ];
+
       // Get measurements for a sensor
       const values = await measurements
         .aggregate(pipeline)
         .toArray()
+
+      const dailyValues = await measurements
+        .aggregate(daily)
+        .toArray()
+      dailyStats.set(sensor._id, dailyValues);
+
 
       if (values.length === 0) {
         // console.log(
         //   `No measurements found for device: ${box.id} & sensor: ${sensor._id}`
         // );
       } else {
-
         // Just create Box folder and box JSON file if we have at least one sensor with data
+        boxHasData = true;
         if (!existsSync(`${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`)) {
           await mkdir(`${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`);
-          console.log(`Created folder: ${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`);
-
-          if (!existsSync(folderNameAndPath)) {
-            let data = JSON.stringify(box);
-            await writeFile(folderNameAndPath, data);
-          }
+          console.log(
+            `Created folder: ${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`
+          );
         }
 
         try {
@@ -106,8 +150,25 @@ async function main() {
             `${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}/${sensor._id}-${date}.csv`
           );
         } catch (error) {
-          console.error(`Save CSV to disk failed for box: ${box.id} and sensor: ${sensor._id}`, error)
+          console.error(
+            `Save CSV to disk failed for box: ${box.id} and sensor: ${sensor._id}`,
+            error
+          );
         }
+      }
+    }
+
+    if (boxHasData) {
+      if (!existsSync(folderNameAndPath)) {
+        box.sensors.map(sensor => {
+          const stats = dailyStats.get(sensor._id);
+          sensor['avg'] = stats[0].avg
+          sensor['min'] = stats[0].min
+          sensor['max'] = stats[0].max
+        })
+
+        let data = JSON.stringify(box);
+        await writeFile(folderNameAndPath, data);
       }
     }
   }
