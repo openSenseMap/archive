@@ -160,15 +160,21 @@ async function main() {
 
     if (boxHasData) {
       if (!existsSync(folderNameAndPath)) {
-        box.sensors.map(sensor => {
-          const stats = dailyStats.get(sensor._id);
-          sensor['avg'] = stats[0].avg
-          sensor['min'] = stats[0].min
-          sensor['max'] = stats[0].max
-        })
+        try {
+          box.sensors.map(sensor => {
+            const stats = dailyStats.get(sensor._id);
+            if (stats.length === 1) {
+              sensor['avg'] = stats[0].avg
+              sensor['min'] = stats[0].min
+              sensor['max'] = stats[0].max
+            }
+          })
 
-        let data = JSON.stringify(box);
-        await writeFile(folderNameAndPath, data);
+          let data = JSON.stringify(box);
+          await writeFile(folderNameAndPath, data);
+        } catch (error) {
+          console.error(`Save JSON to disk failed for box: ${box.id}`,error);
+        }
       }
     }
   }
