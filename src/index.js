@@ -1,19 +1,19 @@
 import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-dotenv.config({path: '.env'});
+dotenv.config({ path: ".env" });
 
 import fs from "node:fs";
 import https from "node:https";
 
 import { load } from "cheerio";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import { renderFile } from "pug";
-import webdav from 'webdav';
+import webdav from "webdav";
 
 const ARCHIVE_DATA_FOLDER = process.env.ARCHIVE_FOLDER;
-const ARCHIVE_WEB_URL = "https://archive.opensensemap.org"
+const ARCHIVE_WEB_URL = "https://archive.opensensemap.org";
 
 const INDEX_DATE = process.env.INDEX_DATE || new Date();
-const date = dayjs(INDEX_DATE).format('YYYY-MM-DD');
+const date = dayjs(INDEX_DATE).format("YYYY-MM-DD");
 
 /**
  * Send notification to mattermost if webhook env is specified
@@ -26,8 +26,8 @@ const sendNotification = (date, error) => {
     let data;
     if (error) {
       data = JSON.stringify({
-        text: `:x: Error while running archive script: ${error}`
-      })
+        text: `:x: Error while running archive script: ${error}`,
+      });
     } else {
       data = JSON.stringify({
         text: `:white_check_mark: Successfully created archive for \`${date}\` :tada:`,
@@ -49,19 +49,18 @@ const sendNotification = (date, error) => {
     req.write(data);
     req.end();
   }
-}
+};
 
 /**
  * Main entrypoint
  */
-async function run () {
+async function run() {
   console.log(`Building index for ${date}`);
 
   // Create date folder
   if (!fs.existsSync(`./public/${date}`)) {
     fs.mkdirSync(`./public/${date}`);
   }
-
 
   try {
     const deviceSizes = [];
@@ -103,7 +102,7 @@ async function run () {
       );
       // console.log(contents);
 
-      const size = contents.reduce((prev, current) => prev + current.size, 0)
+      const size = contents.reduce((prev, current) => prev + current.size, 0);
       deviceSizes.push(size);
 
       // Create device index file
@@ -134,9 +133,9 @@ async function run () {
     // Size of actual date
     const dateSize = deviceSizes.reduce((prev, current) => prev + current, 0);
     console.log(date, dateSize);
-    dateFolderSizes.set(date,dateSize);
+    dateFolderSizes.set(date, dateSize);
 
-    if (process.env.PARSE_ARCHIVE_URL.toLowerCase() === 'true') {
+    if (process.env.PARSE_ARCHIVE_URL.toLowerCase() === "true") {
       const response = await fetch(ARCHIVE_WEB_URL);
       if (response.ok) {
         const body = await response.text();
@@ -150,9 +149,9 @@ async function run () {
       }
     } else {
       // Check if ./public/index.html files exists to parse folder sizes
-      if (fs.existsSync('./public/index.html')) {
+      if (fs.existsSync("./public/index.html")) {
         const $ = load(fs.readFileSync("./public/index.html"));
-        const folderSizes = $('td[class=folder-size]');
+        const folderSizes = $("td[class=folder-size]");
         for (const folderSize of folderSizes) {
           const dataFolderSize = folderSize.attributes.filter(
             (attribute) => attribute.name === "data-folder-size"
@@ -185,14 +184,13 @@ async function run () {
     const license = renderFile("./templates/license.pug");
     fs.writeFileSync("./public/LICENSE.html", license);
 
-    sendNotification(date)
+    sendNotification(date);
 
-    console.log('Finished indexing!!!')
-
+    console.log("Finished indexing!!!");
   } catch (error) {
-    sendNotification(date, error)
+    sendNotification(date, error);
   }
 }
 
 // Fire it up!
-run()
+run();
