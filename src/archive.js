@@ -103,6 +103,9 @@ async function main() {
                 },
               },
             },
+            count: {
+              $count: {},
+            },
           },
         },
         {
@@ -111,6 +114,7 @@ async function main() {
               avg: "$avg",
               min: "$min",
               max: "$max",
+              count: "$count",
             },
           },
         },
@@ -164,6 +168,7 @@ async function main() {
               sensor["avg"] = stats[0].avg;
               sensor["min"] = stats[0].min;
               sensor["max"] = stats[0].max;
+              sensor["count"] = stats[0].count;
             }
           });
 
