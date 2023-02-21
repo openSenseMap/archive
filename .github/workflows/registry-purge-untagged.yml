@@ -14,5 +14,5 @@ jobs:
         with:
           token: ${{ secrets.GHCR_TOKEN}}
           organization: ${{ github.repository_owner}}
-          container: ${{ github.event.repository.name }}
+          container: osem-archiver
           prune-untagged: true
