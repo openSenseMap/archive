@@ -13,12 +13,12 @@ import { notifyMattermost } from "./utils/notification.js";
 const url = `mongodb://${process.env.MONGO_HOST}:27017/${process.env.MONGO_DB}`;
 const client = new MongoClient(url);
 
-const ARCHIVE_BASE_FOLDER = process.env.ARCHIVE_BASE_FOLDER || "./archive"
-const INDEX_DATE = process.env.INDEX_DATE || dayjs(new Date()).subtract(1, 'day');
+const ARCHIVE_BASE_FOLDER = process.env.ARCHIVE_BASE_FOLDER || "./archive";
+const INDEX_DATE =
+  process.env.INDEX_DATE || dayjs(new Date()).subtract(1, "day");
 const date = dayjs(INDEX_DATE).format("YYYY-MM-DD");
 
 async function main() {
-
   if (!existsSync(`${ARCHIVE_BASE_FOLDER}/${date}`)) {
     await mkdir(`${ARCHIVE_BASE_FOLDER}/${date}`);
     console.log(`Created folder: ${ARCHIVE_BASE_FOLDER}/${date}`);
@@ -40,7 +40,7 @@ async function main() {
     loc: 1,
   };
 
-  console.time(`Archive date: ${date}`)
+  console.time(`Archive date: ${date}`);
   const boxesCursor = boxes.find({}).project(deviceProjection);
 
   for await (const box of boxesCursor) {
@@ -73,7 +73,7 @@ async function main() {
               createdAt: "$createdAt",
               value: "$value",
             },
-          }
+          },
         },
       ];
 
@@ -117,15 +117,10 @@ async function main() {
       ];
 
       // Get measurements for a sensor
-      const values = await measurements
-        .aggregate(pipeline)
-        .toArray()
+      const values = await measurements.aggregate(pipeline).toArray();
 
-      const dailyValues = await measurements
-        .aggregate(daily)
-        .toArray()
+      const dailyValues = await measurements.aggregate(daily).toArray();
       dailyStats.set(sensor._id, dailyValues);
-
 
       if (values.length === 0) {
         // console.log(
@@ -134,7 +129,9 @@ async function main() {
       } else {
         // Just create Box folder and box JSON file if we have at least one sensor with data
         boxHasData = true;
-        if (!existsSync(`${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`)) {
+        if (
+          !existsSync(`${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`)
+        ) {
           await mkdir(`${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`);
           console.log(
             `Created folder: ${ARCHIVE_BASE_FOLDER}/${date}/${box.id}-${boxName}`
@@ -161,19 +158,19 @@ async function main() {
     if (boxHasData) {
       if (!existsSync(folderNameAndPath)) {
         try {
-          box.sensors.map(sensor => {
+          box.sensors.map((sensor) => {
             const stats = dailyStats.get(sensor._id);
             if (stats.length === 1) {
-              sensor['avg'] = stats[0].avg
-              sensor['min'] = stats[0].min
-              sensor['max'] = stats[0].max
+              sensor["avg"] = stats[0].avg;
+              sensor["min"] = stats[0].min;
+              sensor["max"] = stats[0].max;
             }
-          })
+          });
 
           let data = JSON.stringify(box);
           await writeFile(folderNameAndPath, data);
         } catch (error) {
-          console.error(`Save JSON to disk failed for box: ${box.id}`,error);
+          console.error(`Save JSON to disk failed for box: ${box.id}`, error);
         }
       }
     }
@@ -189,11 +186,11 @@ async function main() {
 
 main()
   .then((response) => {
-    console.log(response)
-    notifyMattermost(INDEX_DATE)
+    console.log(response);
+    notifyMattermost(INDEX_DATE);
   })
   .catch((error) => {
-    console.error(error)
-    notifyMattermost(INDEX_DATE, error)
+    console.error(error);
+    notifyMattermost(INDEX_DATE, error);
   })
   .finally(() => client.close());
