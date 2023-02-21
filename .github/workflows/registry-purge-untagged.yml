@@ -15,4 +15,4 @@ jobs:
           token: ${{ secrets.GHCR_TOKEN}}
           organization: ${{ github.repository_owner}}
           container: ${{ github.event.repository.name }}
-          untagged: true
+          prune-untagged: true
