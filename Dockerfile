@@ -8,7 +8,7 @@ COPY package*.json /usr/src/app/
 RUN npm ci --only=production
 
 # --------------> The production image
-FROM node:18.7.0-buster-slim
+FROM node:19.7.0-buster-slim
 RUN apt-get update -y && apt-get install -y \
   dumb-init \
   && rm -rf /var/lib/apt/lists/*
