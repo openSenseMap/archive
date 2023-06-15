@@ -16,6 +16,6 @@ jobs:
         with:
           token: ${{ secrets.GHCR_TOKEN}}
           organization: ${{ github.repository_owner}}
-          container: osem-archiver
+          container: archiver
           tag-regex: pr-${{github.event.pull_request.number}}$
           dry-run: false
