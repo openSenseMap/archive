@@ -1,6 +1,6 @@
 {
   "name": "opensensemap-archiver",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Scripts, tools and infrastructure to generate the openSenseMap Archive",
   "type": "module",
   "main": "./src/archive.js",
