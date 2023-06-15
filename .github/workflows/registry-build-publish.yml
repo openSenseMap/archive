@@ -3,7 +3,6 @@ name: Build and publish to Github Container Registry
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*.*.*' ]
   pull_request:
     branches:
       - main
