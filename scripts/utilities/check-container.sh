@@ -48,8 +48,8 @@ check_archiver () {
       rm -rf "$ARCHIVE_FOLDER"
 
       echo "Cleanup resources..."
-      rm -f ./dumps/boxes
-      rm -f ./dumps/measurements
+      rm -f ./dumps/boxes_*
+      rm -f ./dumps/measure_*
   fi
 }
 
