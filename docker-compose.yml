@@ -26,9 +26,12 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - ./dumps:/exports
+      - ./dumps:/dumps
+      - ./exports:/exports
+      - ./scripts/mongodb/aggregations.js:/functions/aggregations.js
       - ./scripts/mongodb/osem_admin.sh:/docker-entrypoint-initdb.d/osem_admin.sh
-      - ./scripts/mongodb/osem_seed.sh:/docker-entrypoint-initdb.d/osem_seed.sh
+      - ./scripts/mongodb/osem_seed_import.sh:/docker-entrypoint-initdb.d/osem_seed_import.sh
+      - ./scripts/mongodb/osem_seed_pipelines.sh:/docker-entrypoint-initdb.d/osem_seed_pipelines.sh
 
 volumes:
   caddy_data:

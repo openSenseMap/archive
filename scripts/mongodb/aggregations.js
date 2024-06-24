@@ -1,0 +1,5 @@
+use OSeM-api
+db.boxes.aggregate([ { '$project': { 'name': 1, 'model': 1, 'exposure': 1, 'description': '', 'id': { '$toString': '$_id' }, 'latitude': { '$arrayElemAt': [ '$currentLocation.coordinates', 1 ] }, 'longitude': { '$arrayElemAt': [ '$currentLocation.coordinates', 0 ] }, 'use_auth': '$useAuth', 'created_at': '$createdAt', 'updated_at': '$updatedAt' } }, { '$out': 'device' } ])
+db.boxes.aggregate([ { '$unwind': { 'path': '$sensors', 'includeArrayIndex': 'sensor', 'preserveNullAndEmptyArrays': false } }, { '$project': { '_id': 0, 'id': { '$toString': '$sensors._id' }, 'title': '$sensors.title', 'sensor_type': '$sensors.sensorType', 'unit': '$sensors.unit', 'device_id': { '$toString': '$_id' } } }, { '$out': 'sensor' } ])
+db.sensor.aggregate([ { '$group': { '_id': '$id', 'device_id': { '$first': '$device_id' }, 'count': { '$sum': 1 } } }, { '$match': { '_id': { '$ne': null }, 'count': { '$gt': 1 } } } ]).forEach(function(doc){ db.sensor.deleteMany({id: doc._id}) })
+db.measurements.aggregate([ { '$project': { '_id': 0, 'sensor_id': { '$toString': '$sensor_id' }, 'value': 1, 'time': '$createdAt' } }, { '$out': 'measurement' } ]) 
