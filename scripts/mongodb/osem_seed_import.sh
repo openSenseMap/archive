@@ -6,8 +6,7 @@ PASS=${OSEM_dbuserpass:-"admin"}
 
 for filename in /dumps/*; do
   [ -e "$filename" ] || continue
-  echo "Going to restore file: $filename"
+  echo "Going to restore dump: $filename"
   mongorestore --db OSeM-api --username $USER --password $PASS --authenticationDatabase OSeM-api --gzip --archive=$filename
-  mongo --username $USER --password $PASS --authenticationDatabase OSeM-api < /functions/aggregations.js
-  echo "Export restored: $filename"
+  echo "Dump restored: $filename"
 done
