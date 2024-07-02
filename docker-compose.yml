@@ -22,7 +22,7 @@ services:
       - db
 
   db:
-    image: mongo:5
+    image: mongo:7
     ports:
       - 27017:27017
     volumes:
