@@ -1,6 +1,7 @@
 node_modules/
 archive/
 dumps/
+exports/*.csv
 
 .env
 .env.local
