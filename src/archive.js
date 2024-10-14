@@ -37,7 +37,10 @@ async function main() {
     name: 1,
     exposure: 1,
     model: 1,
-    loc: 1,
+    locations: {
+      type: 1,
+      coordinates: 1
+    }
   };
 
   console.time(`Archive date: ${date}`);
@@ -49,8 +52,25 @@ async function main() {
     let boxHasData = false;
     const dailyStats = new Map();
 
+    // Attach longitude and latitude to stationary devices
+    if (box.exposure !== 'mobile') {
+      box.longitude = box.locations[0].coordinates[0];
+      box.latitude = box.locations[0].coordinates[1];
+    }
+
     for await (const sensor of box.sensors) {
       // console.time(`Getting measurements for sensor: ${sensor._id}`);
+
+      // Export location of measurement if it is a mobile device
+      const geometry = {};
+      if (box.exposure === 'mobile') {
+        geometry["longitude"] = {
+          $arrayElemAt: ["$location.coordinates", 0],
+        };
+        geometry["latitude"] = {
+          $arrayElemAt: ["$location.coordinates", 1],
+        };
+      }
 
       // Use aggregation to get measurements
       const pipeline = [
@@ -64,6 +84,7 @@ async function main() {
               },
             },
             value: 1,
+            ...geometry
           },
         },
         { $sort: { createdAt: 1 } },
@@ -72,6 +93,8 @@ async function main() {
             newRoot: {
               createdAt: "$createdAt",
               value: "$value",
+              longitude: "$longitude",
+              latitude: "$latitude",
             },
           },
         },
