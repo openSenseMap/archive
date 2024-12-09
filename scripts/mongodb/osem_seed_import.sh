@@ -4,9 +4,9 @@ USER=${OSEM_dbuser:-"admin"}
 DATABASE=OSeM-api
 PASS=${OSEM_dbuserpass:-"admin"}
 
-for filename in /exports/*; do
+for filename in /dumps/*; do
   [ -e "$filename" ] || continue
-  echo "Going to restore file: $filename"
+  echo "Going to restore dump: $filename"
   mongorestore --db OSeM-api --username $USER --password $PASS --authenticationDatabase OSeM-api --gzip --archive=$filename
-  echo "Export restored: $filename"
+  echo "Dump restored: $filename"
 done
